@@ -370,8 +370,8 @@
 
   <!-- ===================== GERBANG CHAT: TANYA NAMA SEBELUM MASUK ===================== -->
   <!-- Ini tampilan "ngobrol dulu" ala WhatsApp sebelum masuk ke web utama.
-       Hanya yang namanya cocok dengan ADMIN_KATA_KUNCI (lihat bagian JS di
-       bawah) yang boleh mengedit checklist; selain itu hanya bisa melihat. -->
+       Hanya yang memasukkan kata sandi tepat "ghaisan 091103" yang boleh mengedit checklist; 
+       selain itu hanya bisa melihat. -->
   <div class="gerbang-chat" id="gerbang-chat">
     <div class="gerbang-header">
       <div class="avatar-grup avatar-kecil">K</div>
@@ -382,7 +382,7 @@
     </div>
     <div class="gerbang-pesan" id="gerbang-pesan"></div>
     <div class="gerbang-input" id="form-gerbang">
-      <input type="text" id="input-nama" placeholder="Ketik nama kamu..." disabled maxlength="60" enterkeyhint="send" inputmode="text">
+      <input type="text" id="input-nama" placeholder="Ketik kata sandi admin..." disabled maxlength="60" enterkeyhint="send" inputmode="text">
       <button type="button" id="tombol-kirim-gerbang" disabled>➤</button>
     </div>
   </div>
@@ -469,15 +469,12 @@
       jadi tetap ada walau halaman ditutup atau komputer dimatikan.
    ========================================================================= */
 
-// ------------------- 0. SIAPA YANG BOLEH MENGEDIT CHECKLIST -------------------
-// Kalau nama atau password yang diketik di gerbang chat MENGANDUNG salah satu kata kunci
-// ini (huruf besar/kecil tidak masalah), orang itu dapat izin EDIT penuh.
-// Selain itu, semua orang lain hanya bisa MELIHAT checklist (tidak bisa
-// mencentang/menghilangkan centang).
-const ADMIN_KATA_KUNCI = ["ghaisan", "091103"]; 
+// ------------------- 0. PASSWORD ADMIN -------------------
+// Hanya password persis "ghaisan 091103" yang memberikan izin edit penuh.
+const ADMIN_PASSWORD = "ghaisan 091103";
 
 let bisaEdit = false;    // diisi otomatis setelah gerbang chat selesai
-let namaPengguna = "";  // nama yang diketik pengguna di gerbang chat
+let namaPengguna = "";  // input yang diketik pengguna di gerbang chat
 
 // ------------------- 1. NILAI IURAN PER KOTAK CENTANG -------------------
 const NILAI_PER_CENTANG = 5000; // dalam Rupiah
@@ -613,7 +610,7 @@ function bangunBarisAnggota(){
       cek.checked = !!anggota.bulanTercentang[indexBulan];
       cek.setAttribute("aria-label", anggota.nama + " - " + bulan);
 
-      // Hanya admin (lihat ADMIN_KATA_KUNCI di atas) yang boleh mengedit;
+      // Hanya admin yang boleh mengedit;
       // pengguna lain checkbox-nya dikunci (disabled) — hanya bisa melihat.
       if(!bisaEdit){
         cek.disabled = true;
@@ -676,10 +673,10 @@ function mulaiAplikasiUtama(){
 
   const lencana = document.getElementById("lencana-mode");
   if(bisaEdit){
-    lencana.textContent = "✏️ Mode Edit — Halo, Admin";
+    lencana.textContent = "✏️ Mode Edit — Admin (Ghaisan)";
     lencana.className = "lencana-mode mode-edit";
   }else{
-    lencana.textContent = "👁️ Mode Hanya Lihat — Halo, " + namaPengguna;
+    lencana.textContent = "👁️ Mode Hanya Lihat — " + namaPengguna;
     lencana.className = "lencana-mode mode-lihat";
   }
 
@@ -742,13 +739,12 @@ async function botBicara(teks, durasiMengetik = 900){
   await jeda(250);
 }
 
-// cek apakah nama atau password yang diketik cocok dengan salah satu kata kunci admin
-function apakahAdmin(nama){
-  const namaBersih = nama.trim().toLowerCase();
-  return ADMIN_KATA_KUNCI.some(kataKunci => namaBersih.includes(kataKunci.toLowerCase()));
+// Cek apakah password yang dimasukkan persis "ghaisan 091103"
+function apakahAdmin(inputVal){
+  return inputVal.trim() === ADMIN_PASSWORD;
 }
 
-// menunggu pengguna mengirim nama lewat tombol kirim (➤) atau tombol Enter
+// menunggu pengguna mengirim input lewat tombol kirim (➤) atau tombol Enter
 let resolverNamaGerbang = null; // menyimpan fungsi "resolve" dari promise yang sedang aktif
 
 function kirimNamaGerbang(){
@@ -779,17 +775,17 @@ function tungguNamaDikirim(){
 async function jalankanGerbangChat(){
   await jeda(500);
   await botBicara("Halo! 👋 Selamat datang di Kasce - Bendahara 8C.");
-  await botBicara("Sebelum masuk, boleh kenalan dulu — siapa nama kamu (atau masukkan password admin)?");
+  await botBicara("Sebelum masuk, masukkan kata sandi admin (Password):");
 
-  const namaDiketik = await tampilkanBubbleKeluarSetelahKirim();
+  const inputDiketik = await tampilkanBubbleKeluarSetelahKirim();
 
-  namaPengguna = namaDiketik;
-  bisaEdit = apakahAdmin(namaDiketik);
+  namaPengguna = inputDiketik;
+  bisaEdit = apakahAdmin(inputDiketik);
 
   if(bisaEdit){
-    await botBicara("Password/Nama admin benar! 😊 Kamu bisa mencentang & mengedit checklist iuran ya.");
+    await botBicara("Password benar! 🔓 Mode Edit diaktifkan untuk Ghaisan.");
   }else{
-    await botBicara("Halo, " + namaDiketik + "! Kamu bisa lihat rekap iuran, tapi checklist-nya cuma bisa dilihat, tidak bisa diedit ya — hanya admin kas yang bisa mengedit. 🙏");
+    await botBicara("Password salah. 🔒 Anda masuk dalam mode hanya-lihat (Read-Only).");
   }
   await botBicara("Yuk langsung masuk ke Kasce! ✅✅");
 
@@ -797,7 +793,7 @@ async function jalankanGerbangChat(){
   mulaiAplikasiUtama();
 }
 
-// membungkus tungguNamaDikirim supaya nama yang diketik juga tampil sebagai bubble keluar
+// membungkus tungguNamaDikirim supaya input yang diketik juga tampil sebagai bubble keluar
 async function tampilkanBubbleKeluarSetelahKirim(){
   const nilai = await tungguNamaDikirim();
   tambahPesan(nilai, "keluar");
