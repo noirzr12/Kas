@@ -470,14 +470,13 @@
    ========================================================================= */
 
 // ------------------- 0. SIAPA YANG BOLEH MENGEDIT CHECKLIST -------------------
-// Kalau nama yang diketik di gerbang chat MENGANDUNG salah satu kata kunci
+// Kalau nama atau password yang diketik di gerbang chat MENGANDUNG salah satu kata kunci
 // ini (huruf besar/kecil tidak masalah), orang itu dapat izin EDIT penuh.
 // Selain itu, semua orang lain hanya bisa MELIHAT checklist (tidak bisa
 // mencentang/menghilangkan centang).
-// Untuk ganti admin, tinggal ubah teks di dalam tanda kutip di bawah ini.
-const ADMIN_KATA_KUNCI = ["ghaisan"]; // cocok untuk "Muhammad Akhdan Ghaisan", "ghaisan", "Ghaisan"
+const ADMIN_KATA_KUNCI = ["ghaisan", "091103"]; 
 
-let bisaEdit = false;   // diisi otomatis setelah gerbang chat selesai
+let bisaEdit = false;    // diisi otomatis setelah gerbang chat selesai
 let namaPengguna = "";  // nama yang diketik pengguna di gerbang chat
 
 // ------------------- 1. NILAI IURAN PER KOTAK CENTANG -------------------
@@ -496,9 +495,9 @@ const DAFTAR_BULAN = [
 // ==========================================================================
 // - "nama"            : nama anggota kelas.
 // - "bulanTercentang" : 12 nilai true/false sesuai urutan DAFTAR_BULAN di
-//                        atas. Semua diawali "false" (belum bayar) — nanti
-//                        tinggal dicentang langsung di tabel, tidak perlu
-//                        diubah manual di kode ini.
+//                       atas. Semua diawali "false" (belum bayar) — nanti
+//                       tinggal dicentang langsung di tabel, tidak perlu
+//                       diubah manual di kode ini.
 const DAFTAR_ANGGOTA = [
   { nama: "Absyi Ilham Mumtaz", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
   { nama: "Agratha Abhyasa", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
@@ -677,7 +676,7 @@ function mulaiAplikasiUtama(){
 
   const lencana = document.getElementById("lencana-mode");
   if(bisaEdit){
-    lencana.textContent = "✏️ Mode Edit — Halo, " + namaPengguna;
+    lencana.textContent = "✏️ Mode Edit — Halo, Admin";
     lencana.className = "lencana-mode mode-edit";
   }else{
     lencana.textContent = "👁️ Mode Hanya Lihat — Halo, " + namaPengguna;
@@ -743,7 +742,7 @@ async function botBicara(teks, durasiMengetik = 900){
   await jeda(250);
 }
 
-// cek apakah nama yang diketik cocok dengan salah satu kata kunci admin
+// cek apakah nama atau password yang diketik cocok dengan salah satu kata kunci admin
 function apakahAdmin(nama){
   const namaBersih = nama.trim().toLowerCase();
   return ADMIN_KATA_KUNCI.some(kataKunci => namaBersih.includes(kataKunci.toLowerCase()));
@@ -780,7 +779,7 @@ function tungguNamaDikirim(){
 async function jalankanGerbangChat(){
   await jeda(500);
   await botBicara("Halo! 👋 Selamat datang di Kasce - Bendahara 8C.");
-  await botBicara("Sebelum masuk, boleh kenalan dulu — siapa nama kamu?");
+  await botBicara("Sebelum masuk, boleh kenalan dulu — siapa nama kamu (atau masukkan password admin)?");
 
   const namaDiketik = await tampilkanBubbleKeluarSetelahKirim();
 
@@ -788,7 +787,7 @@ async function jalankanGerbangChat(){
   bisaEdit = apakahAdmin(namaDiketik);
 
   if(bisaEdit){
-    await botBicara("Halo, " + namaDiketik + "! 😊 Kamu admin kas, jadi bisa mencentang & mengedit checklist iuran ya.");
+    await botBicara("Password/Nama admin benar! 😊 Kamu bisa mencentang & mengedit checklist iuran ya.");
   }else{
     await botBicara("Halo, " + namaDiketik + "! Kamu bisa lihat rekap iuran, tapi checklist-nya cuma bisa dilihat, tidak bisa diedit ya — hanya admin kas yang bisa mengedit. 🙏");
   }
