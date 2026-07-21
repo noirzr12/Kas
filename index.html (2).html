@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kasce - Bendahara 8C</title>
+
+<!-- Font: Poppins untuk judul/header ala nama grup, Inter untuk teks, Space Mono untuk angka -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    /* ===== Palet warna ala WhatsApp ===== */
+    --wa-hijau-tua: #075E54;      /* app bar / header */
+    --wa-hijau-sedang: #128C7E;   /* aksen sekunder */
+    --wa-hijau-terang: #25D366;   /* tombol/aksen utama (FAB hijau) */
+    --wa-biru-centang: #53BDEB;   /* warna centang biru "sudah dibaca" */
+    --wa-wallpaper: #E5DDD5;      /* warna wallpaper chat */
+    --wa-bubble: #DCF8C6;         /* bubble chat keluar (hijau muda) */
+    --kertas: #FFFFFF;
+    --tinta: #111B21;
+    --tinta-lembut: #667781;
+    --merah: #D32F2F;
+    --radius: 10px;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    background: var(--wa-wallpaper);
+    /* pola titik-titik halus meniru wallpaper chat WhatsApp */
+    background-image: radial-gradient(rgba(255,255,255,0.5) 1px, transparent 1px);
+    background-size: 22px 22px;
+    color: var(--tinta);
+    font-family: 'Inter', sans-serif;
+    padding: 20px 12px 60px;
+  }
+
+  /* ===================== HEADER ALA APP BAR GRUP WHATSAPP ===================== */
+  .kop-surat{
+    max-width: 1100px;
+    margin: 0 auto 20px;
+    background: var(--wa-hijau-tua);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+  }
+  .avatar-grup{
+    flex-shrink: 0;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--wa-hijau-terang);
+    display: flex; align-items: center; justify-content: center;
+    font-family:'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--wa-hijau-tua);
+    border: 2px solid rgba(255,255,255,0.4);
+  }
+  .info-grup h1{
+    font-family:'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: clamp(19px, 4vw, 24px);
+    margin: 0 0 3px;
+    letter-spacing: 0.2px;
+  }
+  .info-grup p{
+    margin:0;
+    color: #CFEFE9;
+    font-size: 12.5px;
+  }
+  .titik-online{
+    display:inline-block; width:7px; height:7px; border-radius:50%;
+    background: var(--wa-hijau-terang); margin-right:5px;
+  }
+
+  /* ===================== KARTU / WRAPPER ===================== */
+  .kartu{
+    max-width: 1100px;
+    margin: 0 auto 18px;
+    background: var(--kertas);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+
+  .keterangan-atas{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items:center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .keterangan-atas h2{
+    font-family:'Poppins', sans-serif;
+    font-size: 16px;
+    margin: 0;
+    color: var(--wa-hijau-tua);
+  }
+  .keterangan-atas .catatan{
+    font-size: 12.5px;
+    color: var(--tinta-lembut);
+  }
+
+  .tombol{
+    font-family:'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    border: 1.5px solid var(--wa-hijau-sedang);
+    background: #fff;
+    color: var(--wa-hijau-sedang);
+    padding: 8px 14px;
+    border-radius: 20px; /* bentuk pil ala tombol WhatsApp */
+    cursor: pointer;
+    transition: 0.15s ease;
+  }
+  .tombol:hover{ background: var(--wa-hijau-sedang); color:#fff; }
+  .tombol.tombol-bahaya{ border-color: var(--merah); color: var(--merah); }
+  .tombol.tombol-bahaya:hover{ background: var(--merah); color:#fff; }
+  .grup-tombol{ display:flex; gap:8px; flex-wrap:wrap; }
+
+  /* ===================== TABEL ===================== */
+  .pembungkus-tabel{
+    overflow-x: auto;
+    border: 1px solid #ECE9E3;
+    border-radius: 8px;
+  }
+
+  table{
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 1000px;
+    font-size: 13px;
+  }
+
+  thead th{
+    background: var(--wa-hijau-sedang);
+    color: #fff;
+    font-family:'Inter', sans-serif;
+    font-weight: 600;
+    padding: 10px 6px;
+    text-align: center;
+    white-space: nowrap;
+    border-right: 1px solid rgba(255,255,255,0.15);
+  }
+  thead th small{
+    display:block;
+    font-weight:400;
+    font-size: 10px;
+    opacity: 0.85;
+  }
+
+  /* Kolom No & Nama dibuat "sticky" agar tetap terlihat saat scroll ke kanan (HP) */
+  thead th:nth-child(1), tbody td:nth-child(1){
+    position: sticky; left: 0; z-index: 2;
+    background: var(--wa-hijau-sedang);
+    width: 40px;
+  }
+  tbody td:nth-child(1){ background: var(--kertas); color: var(--tinta-lembut); font-family:'Space Mono', monospace; font-size:11px; }
+
+  thead th:nth-child(2), tbody td:nth-child(2){
+    position: sticky; left: 40px; z-index: 2;
+    text-align: left;
+    min-width: 190px;
+  }
+  thead th:nth-child(2){ background: var(--wa-hijau-sedang); }
+  tbody td:nth-child(2){ background: #fff; font-weight: 600; }
+
+  tbody tr:nth-child(even) td:nth-child(2){ background: #F5FBF9; }
+  tbody tr:nth-child(even) td:nth-child(1){ background: #EFF7F5; }
+
+  tbody td{
+    padding: 8px 6px;
+    text-align: center;
+    border-bottom: 1px solid #ECE9E3;
+    border-right: 1px solid #ECE9E3;
+  }
+
+  /* ===== Checkbox digayakan ala "centang biru" tanda pesan terkirim WhatsApp ===== */
+  .kotak-centang{ position: relative; display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; cursor:pointer; }
+  .kotak-centang input{
+    position:absolute; inset:0; opacity:0; margin:0; cursor:pointer; width:100%; height:100%;
+    z-index: 2; /* input diletakkan PALING ATAS supaya semua klik/tap pasti kena checkbox */
+  }
+  .kotak-centang .tampilan{
+    position:absolute;
+    top:50%; left:50%; transform:translate(-50%,-50%);
+    width: 30px; height: 30px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius: 50%;
+    border: 1.5px solid #C6CBCF;
+    background: #fff;
+    transition: 0.12s ease;
+    font-size: 13px;
+    color: transparent;
+    pointer-events: none; /* lingkaran ini hanya tampilan, tidak boleh menangkap klik */
+  }
+  .kotak-centang input:checked + .tampilan{
+    background: var(--wa-bubble);
+    border-color: var(--wa-hijau-terang);
+    color: var(--wa-biru-centang);
+    font-weight: 700;
+  }
+  .kotak-centang input:checked + .tampilan::after{
+    content: "✓✓"; /* centang ganda ala pesan WhatsApp yang sudah dibaca */
+    letter-spacing: -3px;
+    font-size: 12px;
+  }
+  .kotak-centang input:focus-visible + .tampilan{
+    outline: 2px solid var(--wa-hijau-tua); outline-offset: 2px;
+  }
+
+  tfoot td{
+    padding: 10px 6px;
+    background: #F5FBF9;
+    font-weight: 700;
+    text-align: center;
+    border-top: 2px solid var(--wa-hijau-tua);
+  }
+
+  /* ===================== BUBBLE CHAT TOTAL (elemen ciri khas) ===================== */
+  .stempel-total{
+    max-width: 1100px;
+    margin: 22px auto 0;
+    display:flex;
+    justify-content:flex-end;
+  }
+  .bubble-chat{
+    position: relative;
+    max-width: 320px;
+    background: var(--wa-bubble);
+    border-radius: 12px 12px 2px 12px; /* sudut lancip di kanan-bawah ala bubble keluar */
+    padding: 12px 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  }
+  .bubble-chat .judul-stempel{
+    font-family:'Inter', sans-serif;
+    font-size: 11.5px;
+    color: var(--tinta-lembut);
+    margin: 0 0 4px;
+  }
+  .bubble-chat .angka-total{
+    font-family:'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: clamp(22px, 5vw, 28px);
+    color: var(--tinta);
+    margin: 0;
+  }
+  .bubble-chat .rincian{
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    font-family:'Space Mono', monospace;
+    font-size: 10.5px;
+    color: var(--tinta-lembut);
+    margin-top: 6px;
+  }
+  .bubble-chat .centang-biru{ color: var(--wa-biru-centang); font-weight:700; letter-spacing:-2px; }
+
+  footer.info-kaki{
+    max-width: 1100px;
+    margin: 18px auto 0;
+    font-size: 12px;
+    color: var(--tinta-lembut);
+    text-align: center;
+  }
+
+  /* ===================== CETAK (PRINT) ===================== */
+  @media print{
+    .grup-tombol, .keterangan-atas .catatan, footer.info-kaki{ display:none; }
+    body{ padding:0; background:#fff; }
+    .kop-surat{ box-shadow:none; }
+  }
+
+  /* ===================== GERBANG CHAT (TANYA NAMA SEBELUM MASUK) ===================== */
+  .gerbang-chat{
+    position: fixed; inset:0; z-index: 1000;
+    display:flex; flex-direction: column;
+    background: var(--wa-wallpaper);
+    background-image: radial-gradient(rgba(255,255,255,0.5) 1px, transparent 1px);
+    background-size: 22px 22px;
+    transition: opacity .35s ease, visibility .35s ease;
+  }
+  .gerbang-chat.gerbang-tersembunyi{ opacity:0; visibility:hidden; pointer-events:none; }
+
+  .gerbang-header{
+    flex-shrink:0;
+    background: var(--wa-hijau-tua); color:#fff;
+    padding: 14px 18px;
+    display:flex; align-items:center; gap:12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  }
+  .avatar-kecil{ width:38px; height:38px; font-size:14px; }
+  .gerbang-header .nama-bot{ font-family:'Poppins', sans-serif; font-weight:700; font-size:15px; }
+  .gerbang-header .status-mengetik{ font-size: 11.5px; color:#CFEFE9; }
+
+  .gerbang-pesan{
+    flex:1; overflow-y:auto;
+    padding: 16px 14px 10px;
+    display:flex; flex-direction:column; gap:8px;
+  }
+
+  .pesan-bubble{
+    max-width: 78%;
+    padding: 9px 13px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.4;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+    animation: gerbang-muncul .25s ease;
+  }
+  .pesan-masuk{ align-self:flex-start; background:#fff; border-top-left-radius:2px; }
+  .pesan-keluar{ align-self:flex-end; background:var(--wa-bubble); border-top-right-radius:2px; }
+  @keyframes gerbang-muncul{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+
+  .bubble-mengetik{
+    align-self:flex-start; background:#fff;
+    padding: 11px 14px; border-radius:10px; border-top-left-radius:2px;
+    display:flex; gap:4px;
+    animation: gerbang-muncul .2s ease;
+  }
+  .bubble-mengetik span{ width:6px; height:6px; border-radius:50%; background:#9AA5AA; animation: gerbang-titik 1s infinite ease-in-out; }
+  .bubble-mengetik span:nth-child(2){ animation-delay:.15s; }
+  .bubble-mengetik span:nth-child(3){ animation-delay:.3s; }
+  @keyframes gerbang-titik{ 0%,60%,100%{ transform:translateY(0); opacity:.5; } 30%{ transform:translateY(-4px); opacity:1; } }
+
+  .gerbang-input{
+    flex-shrink:0; display:flex; gap:8px;
+    padding: 10px; background:#F0F0F0;
+  }
+  .gerbang-input input{
+    flex:1; border:none; border-radius:20px;
+    padding: 11px 16px; font-size:14px; font-family:'Inter', sans-serif;
+    outline:none;
+  }
+  .gerbang-input button{
+    width:40px; height:40px; border-radius:50%; border:none;
+    background: var(--wa-hijau-terang); color:#fff; font-size:16px;
+    cursor:pointer; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .gerbang-input input:disabled, .gerbang-input button:disabled{ opacity:.5; cursor:not-allowed; }
+
+  /* Konten utama disembunyikan dulu selagi gerbang chat berjalan */
+  #konten-utama{ transition: opacity .5s ease; }
+  #konten-utama.konten-tersembunyi{ opacity:0; pointer-events:none; }
+
+  /* Checkbox dikunci untuk pengguna selain admin (mode hanya-lihat) */
+  .kotak-centang input:disabled{ cursor:not-allowed; }
+  .kotak-centang.kotak-terkunci{ cursor:not-allowed; }
+  .kotak-centang.kotak-terkunci .tampilan{ opacity:.7; }
+
+  .lencana-mode{
+    display:inline-block; margin-top:4px;
+    font-size: 11px; font-weight:600;
+    padding: 2px 10px; border-radius: 20px;
+  }
+  .lencana-mode.mode-edit{ background: var(--wa-hijau-terang); color: var(--wa-hijau-tua); }
+  .lencana-mode.mode-lihat{ background: rgba(255,255,255,0.2); color:#fff; }
+</style>
+</head>
+<body>
+
+  <!-- ===================== GERBANG CHAT: TANYA NAMA SEBELUM MASUK ===================== -->
+  <!-- Ini tampilan "ngobrol dulu" ala WhatsApp sebelum masuk ke web utama.
+       Hanya yang namanya cocok dengan ADMIN_KATA_KUNCI (lihat bagian JS di
+       bawah) yang boleh mengedit checklist; selain itu hanya bisa melihat. -->
+  <div class="gerbang-chat" id="gerbang-chat">
+    <div class="gerbang-header">
+      <div class="avatar-grup avatar-kecil">K</div>
+      <div>
+        <div class="nama-bot">Kasce Bot</div>
+        <div class="status-mengetik" id="status-header">online</div>
+      </div>
+    </div>
+    <div class="gerbang-pesan" id="gerbang-pesan"></div>
+    <div class="gerbang-input" id="form-gerbang">
+      <input type="text" id="input-nama" placeholder="Ketik nama kamu..." disabled maxlength="60" enterkeyhint="send" inputmode="text">
+      <button type="button" id="tombol-kirim-gerbang" disabled>➤</button>
+    </div>
+  </div>
+
+  <!-- ===================== KONTEN UTAMA (disembunyikan sampai gerbang chat selesai) ===================== -->
+  <div id="konten-utama" class="konten-tersembunyi">
+
+  <!-- ===================== JUDUL UTAMA (ala app bar grup WhatsApp) ===================== -->
+  <header class="kop-surat">
+    <div class="avatar-grup">8C</div>
+    <div class="info-grup">
+      <h1>Kasce - Bendahara 8C</h1>
+      <p><span class="titik-online"></span>Grup kas kelas · Semester 1 &amp; 2 · Juli 2026 – Juni 2027</p>
+      <span class="lencana-mode" id="lencana-mode">Memuat...</span>
+    </div>
+  </header>
+
+  <!-- ===================== TABEL DAFTAR ANGGOTA ===================== -->
+  <main class="kartu">
+    <div class="keterangan-atas">
+      <div>
+        <h2>Rekap Checklist Iuran Bulanan</h2>
+        <p class="catatan">Centang kotak jika anggota sudah membayar iuran bulan tersebut (1 kotak = Rp 5.000). Data tersimpan otomatis di perangkat ini.</p>
+      </div>
+      <div class="grup-tombol">
+        <button class="tombol" onclick="window.print()">🖨️ Cetak</button>
+        <button class="tombol tombol-bahaya" onclick="resetSemuaData()">↺ Reset Data</button>
+      </div>
+    </div>
+
+    <div class="pembungkus-tabel">
+      <table id="tabel-kas">
+        <thead>
+          <tr id="baris-header">
+            <th>No</th>
+            <th>Nama Anggota</th>
+            <!-- Kolom bulan dibuat otomatis lewat JavaScript dari array DAFTAR_BULAN di bawah -->
+          </tr>
+        </thead>
+        <tbody id="isi-tabel">
+          <!-- Baris nama & checkbox dibuat otomatis lewat JavaScript dari array DAFTAR_ANGGOTA di bawah -->
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2">Total Kotak Tercentang</td>
+            <td id="footer-jumlah-centang" colspan="12">0</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </main>
+
+  <!-- ===================== BUBBLE TOTAL (ala pesan WhatsApp terkirim) ===================== -->
+  <section class="stempel-total">
+    <div class="bubble-chat">
+      <p class="judul-stempel">Nominal yang Berhasil Dikumpulkan</p>
+      <p class="angka-total" id="total-nominal">Rp 0</p>
+      <p class="rincian">
+        <span id="rincian-hitung">0 kotak × Rp 5.000</span>
+        <span class="centang-biru">✓✓</span>
+      </p>
+    </div>
+  </section>
+
+  <footer class="info-kaki">
+    Kasce · Bendahara 8C — dibuat untuk digunakan sepanjang Semester 1 &amp; 2, Tahun Ajaran 2026/2027.
+  </footer>
+
+  </div> <!-- tutup #konten-utama -->
+
+<script>
+/* =========================================================================
+   KASCE - BENDAHARA 8C
+   =========================================================================
+   PETUNJUK PENGGUNAAN:
+   1. Nama anggota kelas 8C sudah dimasukkan di "DAFTAR_ANGGOTA" di bawah.
+      Kalau ada perubahan (anak pindah, nama salah tulis, dsb), tinggal
+      ubah teks di dalam tanda kutip "..." lalu simpan.
+   2. Boleh menambah/menghapus baris nama dengan menambah/menghapus satu
+      blok { nama: "...", bulanTercentang: [...] } di dalam array.
+   3. Nilai iuran per kotak diatur di variabel NILAI_PER_CENTANG.
+   4. Data checklist yang sudah dicentang akan tersimpan otomatis di
+      penyimpanan browser (localStorage) milik perangkat/browser ini,
+      jadi tetap ada walau halaman ditutup atau komputer dimatikan.
+   ========================================================================= */
+
+// ------------------- 0. SIAPA YANG BOLEH MENGEDIT CHECKLIST -------------------
+// Kalau nama yang diketik di gerbang chat MENGANDUNG salah satu kata kunci
+// ini (huruf besar/kecil tidak masalah), orang itu dapat izin EDIT penuh.
+// Selain itu, semua orang lain hanya bisa MELIHAT checklist (tidak bisa
+// mencentang/menghilangkan centang).
+// Untuk ganti admin, tinggal ubah teks di dalam tanda kutip di bawah ini.
+const ADMIN_KATA_KUNCI = ["ghaisan"]; // cocok untuk "Muhammad Akhdan Ghaisan", "ghaisan", "Ghaisan"
+
+let bisaEdit = false;   // diisi otomatis setelah gerbang chat selesai
+let namaPengguna = "";  // nama yang diketik pengguna di gerbang chat
+
+// ------------------- 1. NILAI IURAN PER KOTAK CENTANG -------------------
+const NILAI_PER_CENTANG = 5000; // dalam Rupiah
+
+// ------------------- 2. DAFTAR 12 BULAN (2 SEMESTER) -------------------
+// Urutan ini mengikuti tahun ajaran: Juli 2026 s/d Juni 2027.
+const DAFTAR_BULAN = [
+  "Juli 2026", "Agustus 2026", "September 2026", "Oktober 2026",
+  "November 2026", "Desember 2026", "Januari 2027", "Februari 2027",
+  "Maret 2027", "April 2027", "Mei 2027", "Juni 2027"
+];
+
+// ==========================================================================
+// >>> DAFTAR NAMA ANGGOTA KELAS 8C — EDIT DI SINI KALAU ADA PERUBAHAN <<<
+// ==========================================================================
+// - "nama"            : nama anggota kelas.
+// - "bulanTercentang" : 12 nilai true/false sesuai urutan DAFTAR_BULAN di
+//                        atas. Semua diawali "false" (belum bayar) — nanti
+//                        tinggal dicentang langsung di tabel, tidak perlu
+//                        diubah manual di kode ini.
+const DAFTAR_ANGGOTA = [
+  { nama: "Absyi Ilham Mumtaz", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Agratha Abhyasa", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Alghani Azmi Danadi", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Azril Ginantaka Dzakwan Ilyasa", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Eshan Feeyza Harahap", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Faezya Ilham AlGhifari", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Gibran Elfarzan Widjanarko", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Haidar Bilfaqih", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Hilmi Ayman Rohmana", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Ilgisha Brahimi Accordian", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Khalid Azzam Gifari", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Malik Al Falah Rindra", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Muhammad Akhdan Ghaisan", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Muhammad Danish Azzafran", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Muhammad Haidar Fata", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Nadhif Adhyastha Brahmantyo", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Omar Zulfadhli Adithianto", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Raynor Gala Al Bayan", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Sultan Muhammad Al Fatih", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Yandhi Herlambang", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
+  { nama: "Zidane Fathan Alfarisi", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] }
+  // Tambahkan anggota baru dengan menyalin format blok { ... } di atas,
+  // lalu tambahkan koma "," setelah blok sebelumnya.
+];
+// ==========================================================================
+// >>> AKHIR BAGIAN DAFTAR NAMA — jangan ubah kode di bawah ini kecuali
+//     memang paham JavaScript <<<
+// ==========================================================================
+
+
+// ------------------- KUNCI PENYIMPANAN DI BROWSER (localStorage) -------------------
+const KUNCI_SIMPAN = "kasce_8c_data_checklist";
+
+// Ambil data tersimpan (jika sebelumnya pernah dicentang), atau pakai data
+// awal di atas kalau ini pemakaian pertama kali di perangkat ini.
+function ambilDataTersimpan(){
+  try{
+    const mentah = localStorage.getItem(KUNCI_SIMPAN);
+    if(mentah) return JSON.parse(mentah);
+  }catch(e){
+    console.warn("Gagal membaca data tersimpan, memakai data awal.", e);
+  }
+  return null;
+}
+
+// Simpan data checklist saat ini ke localStorage.
+function simpanData(){
+  try{
+    localStorage.setItem(KUNCI_SIMPAN, JSON.stringify(DAFTAR_ANGGOTA));
+  }catch(e){
+    console.warn("Gagal menyimpan data (localStorage tidak tersedia).", e);
+  }
+}
+
+// Cocokkan data tersimpan dengan daftar nama saat ini (berdasarkan nama).
+// Jika nama sama & jumlah bulan cocok, pakai status centang yang tersimpan.
+function gabungkanDenganDataTersimpan(){
+  const tersimpan = ambilDataTersimpan();
+  if(!tersimpan) return;
+  DAFTAR_ANGGOTA.forEach(anggota => {
+    const cocok = tersimpan.find(x => x.nama === anggota.nama);
+    if(cocok && Array.isArray(cocok.bulanTercentang) && cocok.bulanTercentang.length === DAFTAR_BULAN.length){
+      anggota.bulanTercentang = cocok.bulanTercentang;
+    }
+  });
+}
+
+// ------------------- FORMAT ANGKA KE RUPIAH -------------------
+function formatRupiah(angka){
+  return "Rp " + angka.toLocaleString("id-ID");
+}
+
+// ------------------- BANGUN HEADER TABEL (12 KOLOM BULAN) -------------------
+function bangunHeaderBulan(){
+  const barisHeader = document.getElementById("baris-header");
+  DAFTAR_BULAN.forEach(bulan => {
+    const th = document.createElement("th");
+    const [namaBulan, tahun] = bulan.split(" ");
+    th.innerHTML = namaBulan.slice(0,3) + "<small>" + tahun + "</small>";
+    th.title = bulan; // tampil lengkap saat kursor diarahkan (hover)
+    barisHeader.appendChild(th);
+  });
+}
+
+// ------------------- BANGUN BARIS TABEL UNTUK SETIAP ANGGOTA -------------------
+function bangunBarisAnggota(){
+  const isiTabel = document.getElementById("isi-tabel");
+  isiTabel.innerHTML = "";
+
+  DAFTAR_ANGGOTA.forEach((anggota, indexAnggota) => {
+    const tr = document.createElement("tr");
+
+    // Kolom No
+    const tdNo = document.createElement("td");
+    tdNo.textContent = indexAnggota + 1;
+    tr.appendChild(tdNo);
+
+    // Kolom Nama
+    const tdNama = document.createElement("td");
+    tdNama.textContent = anggota.nama;
+    tr.appendChild(tdNama);
+
+    // 12 Kolom Checklist Bulan
+    DAFTAR_BULAN.forEach((bulan, indexBulan) => {
+      const td = document.createElement("td");
+
+      const pembungkus = document.createElement("span");
+      pembungkus.className = "kotak-centang" + (bisaEdit ? "" : " kotak-terkunci");
+
+      const cek = document.createElement("input");
+      cek.type = "checkbox";
+      cek.checked = !!anggota.bulanTercentang[indexBulan];
+      cek.setAttribute("aria-label", anggota.nama + " - " + bulan);
+
+      // Hanya admin (lihat ADMIN_KATA_KUNCI di atas) yang boleh mengedit;
+      // pengguna lain checkbox-nya dikunci (disabled) — hanya bisa melihat.
+      if(!bisaEdit){
+        cek.disabled = true;
+        pembungkus.title = "Hanya admin yang bisa mengedit checklist ini";
+      }
+
+      const tampilan = document.createElement("span");
+      tampilan.className = "tampilan";
+      tampilan.setAttribute("aria-hidden", "true");
+
+      cek.addEventListener("change", () => {
+        anggota.bulanTercentang[indexBulan] = cek.checked;
+        simpanData();
+        perbaruiSemuaTotal();
+      });
+
+      pembungkus.appendChild(cek);
+      pembungkus.appendChild(tampilan);
+      td.appendChild(pembungkus);
+      tr.appendChild(td);
+    });
+
+    isiTabel.appendChild(tr);
+  });
+}
+
+// ------------------- HITUNG & TAMPILKAN TOTAL -------------------
+function hitungTotalKotakTercentang(){
+  let jumlah = 0;
+  DAFTAR_ANGGOTA.forEach(anggota => {
+    anggota.bulanTercentang.forEach(status => { if(status) jumlah++; });
+  });
+  return jumlah;
+}
+
+function perbaruiSemuaTotal(){
+  const jumlahCentang = hitungTotalKotakTercentang();
+  const totalNominal = jumlahCentang * NILAI_PER_CENTANG;
+
+  document.getElementById("footer-jumlah-centang").textContent = jumlahCentang;
+  document.getElementById("total-nominal").textContent = formatRupiah(totalNominal);
+  document.getElementById("rincian-hitung").textContent =
+    jumlahCentang + " kotak × " + formatRupiah(NILAI_PER_CENTANG);
+}
+
+// ------------------- TOMBOL RESET DATA -------------------
+function resetSemuaData(){
+  const yakin = confirm("Yakin ingin menghapus SEMUA centang yang tersimpan di perangkat ini? Tindakan ini tidak bisa dibatalkan.");
+  if(!yakin) return;
+  localStorage.removeItem(KUNCI_SIMPAN);
+  location.reload();
+}
+
+// ------------------- MENYALAKAN APLIKASI UTAMA (dipanggil setelah gerbang chat selesai) -------------------
+function mulaiAplikasiUtama(){
+  gabungkanDenganDataTersimpan();
+  bangunHeaderBulan();
+  bangunBarisAnggota();
+  perbaruiSemuaTotal();
+
+  const lencana = document.getElementById("lencana-mode");
+  if(bisaEdit){
+    lencana.textContent = "✏️ Mode Edit — Halo, " + namaPengguna;
+    lencana.className = "lencana-mode mode-edit";
+  }else{
+    lencana.textContent = "👁️ Mode Hanya Lihat — Halo, " + namaPengguna;
+    lencana.className = "lencana-mode mode-lihat";
+  }
+
+  // Tampilkan konten utama, sembunyikan gerbang chat
+  document.getElementById("konten-utama").classList.remove("konten-tersembunyi");
+  document.getElementById("gerbang-chat").classList.add("gerbang-tersembunyi");
+}
+
+// =========================================================================
+// GERBANG CHAT — animasi "ngobrol dulu" ala WhatsApp sebelum masuk ke web
+// =========================================================================
+const kotakPesan = document.getElementById("gerbang-pesan");
+const inputNamaGerbang = document.getElementById("input-nama");
+const formGerbang = document.getElementById("form-gerbang");
+const tombolKirimGerbang = document.getElementById("tombol-kirim-gerbang");
+const statusHeaderGerbang = document.getElementById("status-header");
+
+// Cadangan: pastikan tombol Enter/Send di keyboard HP maupun laptop selalu
+// memicu pengiriman, sekaligus juga dipicu lewat tombol kirim (➤) —
+// keduanya memanggil fungsi yang sama, TIDAK memakai <form>/submit bawaan
+// browser karena beberapa tampilan preview mem-blokir submit form.
+inputNamaGerbang.addEventListener("keydown", (e) => {
+  if(e.key === "Enter"){
+    e.preventDefault();
+    kirimNamaGerbang();
+  }
+});
+
+// jeda waktu sederhana, dipakai untuk mengatur ritme animasi chat
+function jeda(ms){
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// menampilkan bubble "sedang mengetik..." lalu menghilangkannya
+async function tampilkanMengetik(durasiMs){
+  statusHeaderGerbang.textContent = "mengetik...";
+  const bubble = document.createElement("div");
+  bubble.className = "bubble-mengetik";
+  bubble.innerHTML = "<span></span><span></span><span></span>";
+  kotakPesan.appendChild(bubble);
+  kotakPesan.scrollTop = kotakPesan.scrollHeight;
+  await jeda(durasiMs);
+  bubble.remove();
+  statusHeaderGerbang.textContent = "online";
+}
+
+// menambah satu bubble pesan (dari bot atau dari pengguna)
+function tambahPesan(teks, jenis){
+  const bubble = document.createElement("div");
+  bubble.className = "pesan-bubble " + (jenis === "keluar" ? "pesan-keluar" : "pesan-masuk");
+  bubble.textContent = teks;
+  kotakPesan.appendChild(bubble);
+  kotakPesan.scrollTop = kotakPesan.scrollHeight;
+}
+
+// bot "mengetik" dulu baru pesannya muncul, biar terasa seperti chat asli
+async function botBicara(teks, durasiMengetik = 900){
+  await tampilkanMengetik(durasiMengetik);
+  tambahPesan(teks, "masuk");
+  await jeda(250);
+}
+
+// cek apakah nama yang diketik cocok dengan salah satu kata kunci admin
+function apakahAdmin(nama){
+  const namaBersih = nama.trim().toLowerCase();
+  return ADMIN_KATA_KUNCI.some(kataKunci => namaBersih.includes(kataKunci.toLowerCase()));
+}
+
+// menunggu pengguna mengirim nama lewat tombol kirim (➤) atau tombol Enter
+let resolverNamaGerbang = null; // menyimpan fungsi "resolve" dari promise yang sedang aktif
+
+function kirimNamaGerbang(){
+  if(!resolverNamaGerbang) return; // belum ada yang menunggu pengiriman, abaikan
+  const nilai = inputNamaGerbang.value.trim();
+  if(!nilai) return; // jangan kirim kalau kosong
+
+  inputNamaGerbang.disabled = true;
+  tombolKirimGerbang.disabled = true;
+
+  const resolve = resolverNamaGerbang;
+  resolverNamaGerbang = null; // cegah kirim dobel
+  resolve(nilai);
+}
+
+tombolKirimGerbang.addEventListener("click", kirimNamaGerbang);
+
+function tungguNamaDikirim(){
+  return new Promise(resolve => {
+    inputNamaGerbang.disabled = false;
+    tombolKirimGerbang.disabled = false;
+    inputNamaGerbang.focus();
+    resolverNamaGerbang = resolve;
+  });
+}
+
+// urutan percakapan lengkap dari awal sampai masuk ke web utama
+async function jalankanGerbangChat(){
+  await jeda(500);
+  await botBicara("Halo! 👋 Selamat datang di Kasce - Bendahara 8C.");
+  await botBicara("Sebelum masuk, boleh kenalan dulu — siapa nama kamu?");
+
+  const namaDiketik = await tampilkanBubbleKeluarSetelahKirim();
+
+  namaPengguna = namaDiketik;
+  bisaEdit = apakahAdmin(namaDiketik);
+
+  if(bisaEdit){
+    await botBicara("Halo, " + namaDiketik + "! 😊 Kamu admin kas, jadi bisa mencentang & mengedit checklist iuran ya.");
+  }else{
+    await botBicara("Halo, " + namaDiketik + "! Kamu bisa lihat rekap iuran, tapi checklist-nya cuma bisa dilihat, tidak bisa diedit ya — hanya admin kas yang bisa mengedit. 🙏");
+  }
+  await botBicara("Yuk langsung masuk ke Kasce! ✅✅");
+
+  await jeda(500);
+  mulaiAplikasiUtama();
+}
+
+// membungkus tungguNamaDikirim supaya nama yang diketik juga tampil sebagai bubble keluar
+async function tampilkanBubbleKeluarSetelahKirim(){
+  const nilai = await tungguNamaDikirim();
+  tambahPesan(nilai, "keluar");
+  await jeda(200);
+  return nilai;
+}
+
+// ------------------- JALANKAN GERBANG CHAT SAAT HALAMAN DIBUKA -------------------
+jalankanGerbangChat();
+</script>
+
+</body>
+</html>
