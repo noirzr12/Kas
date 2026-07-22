@@ -279,7 +279,7 @@
     .kop-surat{ box-shadow:none; }
   }
 
-  /* ===================== GERBANG CHAT (TANYA PASSWORD SEBELUM MASUK) ===================== */
+  /* ===================== GERBANG CHAT (TANYA NAMA SEBELUM MASUK) ===================== */
   .gerbang-chat{
     position: fixed; inset:0; z-index: 1000;
     display:flex; flex-direction: column;
@@ -368,26 +368,29 @@
 </head>
 <body>
 
-  <!-- ===================== GERBANG CHAT: TANYA PASSWORD SEBELUM MASUK ===================== -->
+  <!-- ===================== GERBANG CHAT: TANYA NAMA SEBELUM MASUK ===================== -->
+  <!-- Ini tampilan "ngobrol dulu" ala WhatsApp sebelum masuk ke web utama.
+       Hanya yang mengetik PIN_ADMIN (lihat bagian JS di
+       bawah) yang boleh mengedit checklist; selain itu hanya bisa melihat. -->
   <div class="gerbang-chat" id="gerbang-chat">
     <div class="gerbang-header">
-      <div class="avatar-grup avatar-kecil">K</div>
+      <div class="avatar-grup avatar-kecil">T</div>
       <div>
-        <div class="nama-bot">Kasce Bot</div>
+        <div class="nama-bot">Pak Taryana</div>
         <div class="status-mengetik" id="status-header">online</div>
       </div>
     </div>
     <div class="gerbang-pesan" id="gerbang-pesan"></div>
     <div class="gerbang-input" id="form-gerbang">
-      <input type="text" id="input-nama" placeholder="Ketik kata sandi admin (091103)..." disabled maxlength="60" enterkeyhint="send" inputmode="text">
+      <input type="text" id="input-nama" placeholder="Type a message" disabled maxlength="60" enterkeyhint="send" inputmode="text">
       <button type="button" id="tombol-kirim-gerbang" disabled>➤</button>
     </div>
   </div>
 
-  <!-- ===================== KONTEN UTAMA ===================== -->
+  <!-- ===================== KONTEN UTAMA (disembunyikan sampai gerbang chat selesai) ===================== -->
   <div id="konten-utama" class="konten-tersembunyi">
 
-  <!-- ===================== JUDUL UTAMA ===================== -->
+  <!-- ===================== JUDUL UTAMA (ala app bar grup WhatsApp) ===================== -->
   <header class="kop-surat">
     <div class="avatar-grup">8C</div>
     <div class="info-grup">
@@ -416,9 +419,12 @@
           <tr id="baris-header">
             <th>No</th>
             <th>Nama Anggota</th>
+            <!-- Kolom bulan dibuat otomatis lewat JavaScript dari array DAFTAR_BULAN di bawah -->
           </tr>
         </thead>
-        <tbody id="isi-tabel"></tbody>
+        <tbody id="isi-tabel">
+          <!-- Baris nama & checkbox dibuat otomatis lewat JavaScript dari array DAFTAR_ANGGOTA di bawah -->
+        </tbody>
         <tfoot>
           <tr>
             <td colspan="2">Total Kotak Tercentang</td>
@@ -429,7 +435,7 @@
     </div>
   </main>
 
-  <!-- ===================== BUBBLE TOTAL ===================== -->
+  <!-- ===================== BUBBLE TOTAL (ala pesan WhatsApp terkirim) ===================== -->
   <section class="stempel-total">
     <div class="bubble-chat">
       <p class="judul-stempel">Nominal yang Berhasil Dikumpulkan</p>
@@ -448,20 +454,52 @@
   </div> <!-- tutup #konten-utama -->
 
 <script>
-// ------------------- PASSWORD ADMIN HANYA 091103 -------------------
-const ADMIN_PASSWORD = "091103";
+/* =========================================================================
+   KASCE - BENDAHARA 8C
+   =========================================================================
+   PETUNJUK PENGGUNAAN:
+   1. Nama anggota kelas 8C sudah dimasukkan di "DAFTAR_ANGGOTA" di bawah.
+      Kalau ada perubahan (anak pindah, nama salah tulis, dsb), tinggal
+      ubah teks di dalam tanda kutip "..." lalu simpan.
+   2. Boleh menambah/menghapus baris nama dengan menambah/menghapus satu
+      blok { nama: "...", bulanTercentang: [...] } di dalam array.
+   3. Nilai iuran per kotak diatur di variabel NILAI_PER_CENTANG.
+   4. Data checklist yang sudah dicentang akan tersimpan otomatis di
+      penyimpanan browser (localStorage) milik perangkat/browser ini,
+      jadi tetap ada walau halaman ditutup atau komputer dimatikan.
+   ========================================================================= */
 
-let bisaEdit = false;
-let inputDiterima = "";
+// ------------------- 0. SIAPA YANG BOLEH MENGEDIT CHECKLIST -------------------
+// Semua orang BOLEH masuk & melihat halaman ini. Tapi hanya yang mengetik
+// PIN_ADMIN ini PERSIS sama (huruf besar/kecil dan spasi berlebih tidak
+// masalah, tapi kata & angkanya harus persis sama) yang dapat izin EDIT
+// (mencentang/menghilangkan centang). Selain itu, checklist-nya terkunci
+// (hanya bisa dilihat).
+// Untuk ganti PIN admin, tinggal ubah teks di dalam tanda kutip di bawah ini.
+const PIN_ADMIN = "ghaisan 091103";
 
-const NILAI_PER_CENTANG = 5000;
+let bisaEdit = false;   // diisi otomatis tergantung apakah PIN yang diketik cocok
+let namaPengguna = "";  // nama/pesan yang diketik pengguna di chat pembuka
 
+// ------------------- 1. NILAI IURAN PER KOTAK CENTANG -------------------
+const NILAI_PER_CENTANG = 5000; // dalam Rupiah
+
+// ------------------- 2. DAFTAR 12 BULAN (2 SEMESTER) -------------------
+// Urutan ini mengikuti tahun ajaran: Juli 2026 s/d Juni 2027.
 const DAFTAR_BULAN = [
   "Juli 2026", "Agustus 2026", "September 2026", "Oktober 2026",
   "November 2026", "Desember 2026", "Januari 2027", "Februari 2027",
   "Maret 2027", "April 2027", "Mei 2027", "Juni 2027"
 ];
 
+// ==========================================================================
+// >>> DAFTAR NAMA ANGGOTA KELAS 8C — EDIT DI SINI KALAU ADA PERUBAHAN <<<
+// ==========================================================================
+// - "nama"            : nama anggota kelas.
+// - "bulanTercentang" : 12 nilai true/false sesuai urutan DAFTAR_BULAN di
+//                        atas. Semua diawali "false" (belum bayar) — nanti
+//                        tinggal dicentang langsung di tabel, tidak perlu
+//                        diubah manual di kode ini.
 const DAFTAR_ANGGOTA = [
   { nama: "Absyi Ilham Mumtaz", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
   { nama: "Agratha Abhyasa", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
@@ -484,24 +522,41 @@ const DAFTAR_ANGGOTA = [
   { nama: "Sultan Muhammad Al Fatih", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
   { nama: "Yandhi Herlambang", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] },
   { nama: "Zidane Fathan Alfarisi", bulanTercentang: [false,false,false,false,false,false,false,false,false,false,false,false] }
+  // Tambahkan anggota baru dengan menyalin format blok { ... } di atas,
+  // lalu tambahkan koma "," setelah blok sebelumnya.
 ];
+// ==========================================================================
+// >>> AKHIR BAGIAN DAFTAR NAMA — jangan ubah kode di bawah ini kecuali
+//     memang paham JavaScript <<<
+// ==========================================================================
 
+
+// ------------------- KUNCI PENYIMPANAN DI BROWSER (localStorage) -------------------
 const KUNCI_SIMPAN = "kasce_8c_data_checklist";
 
+// Ambil data tersimpan (jika sebelumnya pernah dicentang), atau pakai data
+// awal di atas kalau ini pemakaian pertama kali di perangkat ini.
 function ambilDataTersimpan(){
   try{
     const mentah = localStorage.getItem(KUNCI_SIMPAN);
     if(mentah) return JSON.parse(mentah);
-  }catch(e){}
+  }catch(e){
+    console.warn("Gagal membaca data tersimpan, memakai data awal.", e);
+  }
   return null;
 }
 
+// Simpan data checklist saat ini ke localStorage.
 function simpanData(){
   try{
     localStorage.setItem(KUNCI_SIMPAN, JSON.stringify(DAFTAR_ANGGOTA));
-  }catch(e){}
+  }catch(e){
+    console.warn("Gagal menyimpan data (localStorage tidak tersedia).", e);
+  }
 }
 
+// Cocokkan data tersimpan dengan daftar nama saat ini (berdasarkan nama).
+// Jika nama sama & jumlah bulan cocok, pakai status centang yang tersimpan.
 function gabungkanDenganDataTersimpan(){
   const tersimpan = ambilDataTersimpan();
   if(!tersimpan) return;
@@ -513,21 +568,24 @@ function gabungkanDenganDataTersimpan(){
   });
 }
 
+// ------------------- FORMAT ANGKA KE RUPIAH -------------------
 function formatRupiah(angka){
   return "Rp " + angka.toLocaleString("id-ID");
 }
 
+// ------------------- BANGUN HEADER TABEL (12 KOLOM BULAN) -------------------
 function bangunHeaderBulan(){
   const barisHeader = document.getElementById("baris-header");
   DAFTAR_BULAN.forEach(bulan => {
     const th = document.createElement("th");
     const [namaBulan, tahun] = bulan.split(" ");
     th.innerHTML = namaBulan.slice(0,3) + "<small>" + tahun + "</small>";
-    th.title = bulan;
+    th.title = bulan; // tampil lengkap saat kursor diarahkan (hover)
     barisHeader.appendChild(th);
   });
 }
 
+// ------------------- BANGUN BARIS TABEL UNTUK SETIAP ANGGOTA -------------------
 function bangunBarisAnggota(){
   const isiTabel = document.getElementById("isi-tabel");
   isiTabel.innerHTML = "";
@@ -535,16 +593,20 @@ function bangunBarisAnggota(){
   DAFTAR_ANGGOTA.forEach((anggota, indexAnggota) => {
     const tr = document.createElement("tr");
 
+    // Kolom No
     const tdNo = document.createElement("td");
     tdNo.textContent = indexAnggota + 1;
     tr.appendChild(tdNo);
 
+    // Kolom Nama
     const tdNama = document.createElement("td");
     tdNama.textContent = anggota.nama;
     tr.appendChild(tdNama);
 
+    // 12 Kolom Checklist Bulan
     DAFTAR_BULAN.forEach((bulan, indexBulan) => {
       const td = document.createElement("td");
+
       const pembungkus = document.createElement("span");
       pembungkus.className = "kotak-centang" + (bisaEdit ? "" : " kotak-terkunci");
 
@@ -553,9 +615,11 @@ function bangunBarisAnggota(){
       cek.checked = !!anggota.bulanTercentang[indexBulan];
       cek.setAttribute("aria-label", anggota.nama + " - " + bulan);
 
+      // Hanya admin (lihat PIN_ADMIN di atas) yang boleh mengedit;
+      // pengguna lain checkbox-nya dikunci (disabled) — hanya bisa melihat.
       if(!bisaEdit){
         cek.disabled = true;
-        pembungkus.title = "Hanya admin (password 091103) yang bisa mengedit checklist ini";
+        pembungkus.title = "Hanya admin yang bisa mengedit checklist ini";
       }
 
       const tampilan = document.createElement("span");
@@ -578,6 +642,7 @@ function bangunBarisAnggota(){
   });
 }
 
+// ------------------- HITUNG & TAMPILKAN TOTAL -------------------
 function hitungTotalKotakTercentang(){
   let jumlah = 0;
   DAFTAR_ANGGOTA.forEach(anggota => {
@@ -596,6 +661,7 @@ function perbaruiSemuaTotal(){
     jumlahCentang + " kotak × " + formatRupiah(NILAI_PER_CENTANG);
 }
 
+// ------------------- TOMBOL RESET DATA -------------------
 function resetSemuaData(){
   const yakin = confirm("Yakin ingin menghapus SEMUA centang yang tersimpan di perangkat ini? Tindakan ini tidak bisa dibatalkan.");
   if(!yakin) return;
@@ -603,6 +669,7 @@ function resetSemuaData(){
   location.reload();
 }
 
+// ------------------- MENYALAKAN APLIKASI UTAMA (dipanggil setelah gerbang chat selesai) -------------------
 function mulaiAplikasiUtama(){
   gabungkanDenganDataTersimpan();
   bangunHeaderBulan();
@@ -611,22 +678,31 @@ function mulaiAplikasiUtama(){
 
   const lencana = document.getElementById("lencana-mode");
   if(bisaEdit){
-    lencana.textContent = "✏️ Mode Edit — Admin (091103)";
+    lencana.textContent = "✏️ Mode Edit — Halo, " + namaPengguna;
     lencana.className = "lencana-mode mode-edit";
   }else{
-    lencana.textContent = "👁️ Mode Hanya Lihat";
+    lencana.textContent = "👁️ Mode Hanya Lihat — Halo, " + namaPengguna;
     lencana.className = "lencana-mode mode-lihat";
   }
 
+  // Tampilkan konten utama, sembunyikan gerbang chat
   document.getElementById("konten-utama").classList.remove("konten-tersembunyi");
   document.getElementById("gerbang-chat").classList.add("gerbang-tersembunyi");
 }
 
+// =========================================================================
+// GERBANG CHAT — animasi "ngobrol dulu" ala WhatsApp sebelum masuk ke web
+// =========================================================================
 const kotakPesan = document.getElementById("gerbang-pesan");
 const inputNamaGerbang = document.getElementById("input-nama");
+const formGerbang = document.getElementById("form-gerbang");
 const tombolKirimGerbang = document.getElementById("tombol-kirim-gerbang");
 const statusHeaderGerbang = document.getElementById("status-header");
 
+// Cadangan: pastikan tombol Enter/Send di keyboard HP maupun laptop selalu
+// memicu pengiriman, sekaligus juga dipicu lewat tombol kirim (➤) —
+// keduanya memanggil fungsi yang sama, TIDAK memakai <form>/submit bawaan
+// browser karena beberapa tampilan preview mem-blokir submit form.
 inputNamaGerbang.addEventListener("keydown", (e) => {
   if(e.key === "Enter"){
     e.preventDefault();
@@ -634,10 +710,12 @@ inputNamaGerbang.addEventListener("keydown", (e) => {
   }
 });
 
+// jeda waktu sederhana, dipakai untuk mengatur ritme animasi chat
 function jeda(ms){
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// menampilkan bubble "sedang mengetik..." lalu menghilangkannya
 async function tampilkanMengetik(durasiMs){
   statusHeaderGerbang.textContent = "mengetik...";
   const bubble = document.createElement("div");
@@ -650,32 +728,46 @@ async function tampilkanMengetik(durasiMs){
   statusHeaderGerbang.textContent = "online";
 }
 
+// menambah satu bubble pesan (dari bot atau dari pengguna)
 function tambahPesan(teks, jenis){
   const bubble = document.createElement("div");
   bubble.className = "pesan-bubble " + (jenis === "keluar" ? "pesan-keluar" : "pesan-masuk");
   bubble.textContent = teks;
   kotakPesan.appendChild(bubble);
-  kotakPesan.scrollTop = kotPesan.scrollHeight;
+  kotakPesan.scrollTop = kotakPesan.scrollHeight;
 }
 
-async function botBicara(teks, durasiMengetik = 800){
+// bot "mengetik" dulu baru pesannya muncul, biar terasa seperti chat asli
+async function botBicara(teks, durasiMengetik = 900){
   await tampilkanMengetik(durasiMengetik);
   tambahPesan(teks, "masuk");
-  await jeda(200);
+  await jeda(250);
 }
 
-let resolverNamaGerbang = null;
+// merapikan teks sebelum dibandingkan: huruf kecil semua, spasi rapi
+function rapikanTeks(teks){
+  return teks.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+// cek apakah teks yang diketik SAMA PERSIS dengan PIN admin (tidak peduli
+// besar/kecil huruf atau spasi berlebih)
+function cocokPinAdmin(teks){
+  return rapikanTeks(teks) === rapikanTeks(PIN_ADMIN);
+}
+
+// menunggu pengguna mengirim nama lewat tombol kirim (➤) atau tombol Enter
+let resolverNamaGerbang = null; // menyimpan fungsi "resolve" dari promise yang sedang aktif
 
 function kirimNamaGerbang(){
-  if(!resolverNamaGerbang) return;
+  if(!resolverNamaGerbang) return; // belum ada yang menunggu pengiriman, abaikan
   const nilai = inputNamaGerbang.value.trim();
-  if(!nilai) return;
+  if(!nilai) return; // jangan kirim kalau kosong
 
   inputNamaGerbang.disabled = true;
   tombolKirimGerbang.disabled = true;
 
   const resolve = resolverNamaGerbang;
-  resolverNamaGerbang = null;
+  resolverNamaGerbang = null; // cegah kirim dobel
   resolve(nilai);
 }
 
@@ -690,28 +782,39 @@ function tungguNamaDikirim(){
   });
 }
 
+// urutan percakapan lengkap dari awal sampai masuk ke web utama.
+// Semua orang boleh masuk & melihat. Kalau yang diketik cocok persis dengan
+// PIN_ADMIN, orang itu dapat izin EDIT; kalau tidak cocok, tetap bisa masuk
+// tapi checklist-nya cuma bisa dilihat (terkunci).
 async function jalankanGerbangChat(){
-  await jeda(400);
+  await jeda(500);
   await botBicara("Halo! 👋 Selamat datang di Kasce - Bendahara 8C.");
-  await botBicara("Masukkan password admin (091103):");
+  await botBicara("Sebelum masuk, kenalan dulu yuk — ketik nama kamu ya.");
 
-  const inputDiketik = await tungguNamaDikirim();
-  tambahPesan(inputDiketik, "keluar");
-  await jeda(200);
-
-  bisaEdit = (inputDiketik.trim() === ADMIN_PASSWORD);
+  const teksDiketik = await tampilkanBubbleKeluarSetelahKirim();
+  bisaEdit = cocokPinAdmin(teksDiketik);
+  namaPengguna = bisaEdit ? "Ghaisan" : teksDiketik;
 
   if(bisaEdit){
-    await botBicara("Password benar! 🔓 Mode Edit diaktifkan.");
+    await botBicara("Halo, Ghaisan! 😊 Kamu admin kas, jadi bisa mencentang & mengedit checklist iuran ya.");
   }else{
-    await botBicara("Password salah. 🔒 Anda masuk dalam mode hanya-lihat (Read-Only).");
+    await botBicara("Halo, " + namaPengguna + "! Kamu bisa lihat rekap iuran kelas di sini ya 👍");
   }
-  await botBicara("Membuka aplikasi Kasce... ✅✅");
+  await botBicara("Yuk langsung masuk ke Kasce! ✅✅");
 
-  await jeda(400);
+  await jeda(500);
   mulaiAplikasiUtama();
 }
 
+// membungkus tungguNamaDikirim supaya nama yang diketik juga tampil sebagai bubble keluar
+async function tampilkanBubbleKeluarSetelahKirim(){
+  const nilai = await tungguNamaDikirim();
+  tambahPesan(nilai, "keluar");
+  await jeda(200);
+  return nilai;
+}
+
+// ------------------- JALANKAN GERBANG CHAT SAAT HALAMAN DIBUKA -------------------
 jalankanGerbangChat();
 </script>
 
